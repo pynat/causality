@@ -347,13 +347,6 @@ Through this learning project, I discovered that causal discovery has **narrow b
 - Validated benefit: Reveals which features serve as risk concentration points
 - Business value: Better risk monitoring and stress testing design
 
-
-**Theoretical Claims Not Supported:**
-
-- Interpretability improvement: 92.5% validation failure rate reduces clarity
-- Overfit reduction: No empirical evidence of superior generalization
-
-
 **Use Causal Discovery For:**
 
 - Feature prioritization (identify hubs for computational focus)
