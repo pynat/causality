@@ -217,7 +217,7 @@ To validate the causal relationships discovered by the PC Algorithm, we applied 
   - `open_lag1` (p=0.048) - Lagged opening price  
   - `low_lag1` (p=0.049) - Lagged low price
 
-**Critical Finding:** Of ~40 features analyzed, **92.5% failed** the Granger causality test, indicating that most correlations and algorithmic causal discoveries may not represent genuine predictive relationships.
+**Critical Finding:** Of ~40 features identified by PC Algorithm, 3 were validated with Granger causality tests. All 3 tested features showed significant predictive power (bb_lower, open_lag1, low_lag1), but 92.5% of algorithmic discoveries remain statistically unvalidated.
 
 **Implications:**
 - **PC Algorithm limitations:** The 66 relationships discovered algorithmically lack statistical predictive power
