@@ -2,8 +2,6 @@
 
 ## Overview
 
-
-
 This project documents my **learning journey into causal inference** applied to ETH 1 year data. I investigate how different selection methods handle feature redundancy, mediator preservation, and the challenges of spurious relationships in financial time series, to understand their practical limitations and applications.
 
 ### Learning Objectives
