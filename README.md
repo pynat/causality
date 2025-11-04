@@ -2,7 +2,8 @@
 
 ## Overview
 
-This project documents my **learning journey into causal inference** applied to ETH 1 year data. I investigate how different selection methods handle feature redundancy, mediator preservation, and the challenges of spurious relationships in financial time series, to understand their practical limitations and applications.
+This project documents my **learning journey into causal inference** applied to one year of high-frequency financial time series data (Ethereum dataset used as a case example).
+I investigate how different selection methods handle feature redundancy, mediator preservation, and the challenges of spurious relationships in financial time series, to understand their practical limitations and applications.
 
 ### Learning Objectives
    
@@ -109,7 +110,7 @@ I empirically test the fundamental claims of causal discovery through:
 - **Method:** Uses manual discovery as well as causal discovery algorithms (PC Algorithm, FCI)
 
 **Objectives:**
-- Identify **leading indicators** vs. **lagging confirmations** (critical for regime changes)
+- Identify **leading indicators** vs. **lagging confirmations** (critical for regime changes in markets, risk systems, or network behavior)   
 - Understand **propagation chains** (e.g., extreme_events → volatility_spike → behavioral_shifts)
 - Avoid **data leakage** by excluding the target from the DAG
 - Build **interpretable signal hierarchies** that account for asymmetric market behavior
@@ -239,7 +240,7 @@ To assess whether market sentiment metrics provide genuine causal signals beyond
 - Applied first differencing and standardization to both series
 - Tested causality across lag structures (1-5 days)
 
-**Fear & Greed → ETH Returns Results:**
+**Fear & Greed → Asset Returns Results:**
 
 | **Lag Structure** | **F-Statistic** | **P-Value** | **Statistical Significance** |
 |-------------------|-----------------|-------------|------------------------------|
@@ -365,6 +366,8 @@ Causal discovery can help identify risk propagation chains such as:
 
 Example causal chain:
 ```
+abnormal_network_activity → access_latency → system_overload → security_alert 
+claim_cluster → loss_ratio_spike → reserve_adjustment → underwriting_response
 sudden_token_inflow → liquidity_stress → price_dislocation → user_exit_behavior
 ```
 
