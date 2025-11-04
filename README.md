@@ -1,4 +1,4 @@
-# Feature Selection & Causal Analysis Framework
+# Feature Selection & Causal Analysis Framework for Financial Time Series
 
 ## Overview
 
@@ -24,7 +24,7 @@ I empirically test the fundamental claims of causal discovery through:
 
 ---
 
-## Market Context: ETH Returns Profile
+## Market Context: Asset Returns Profile
 
 ### Distribution Characteristics
 - **Near-zero mean return** (-0.01%) with **negative median** (-0.05%) indicates slight bearish bias in the sample period
@@ -65,7 +65,7 @@ I empirically test the fundamental claims of causal discovery through:
 
 ## Feature Taxonomy (Prioritized by Distribution Insights)
 
-| **Domain** | **Features** | **Relevance to ETH Profile** |
+| **Domain** | **Features** | **Relevance to Asset Profile** |
 |------------|--------------|-------------------------------|
 | **Volatility** | volatility_7d, vol_momentum, vol_expansion | **High Priority:** 74% annualized volatility |
 | **Risk** | drawdown, tail_risk_signal, var_breach_95 | **Critical:** VaR 95% = -5.95%, high kurtosis |
@@ -259,9 +259,9 @@ To assess whether market sentiment metrics provide genuine causal signals beyond
 - **Longer lags weaken predictive power** with 4-day lag showing lowest F-statistic (0.732)
 
 
-### Cross-Asset Causal Validation Granger
+### Cross-Asset Causal Validation (Inter-Market Relationships)
 
-To examine whether major cryptocurrency pairs exhibit predictive relationships that could enhance portfolio construction and risk management, we conducted comprehensive Granger causality analysis between **BTC and ETH** across multiple data dimensions.
+To examine whether major asset pairs exhibit predictive relationships that could enhance portfolio construction and risk management, we conducted comprehensive Granger causality analysis between **BTC and ETH** across multiple data dimensions.
 
 **Methodology:**
 - Downloaded 1-year daily BTC data from Binance API (320 observations)
@@ -357,12 +357,12 @@ Through this learning project, I discovered that causal discovery has **narrow b
 
 **Bottom Line:** Causal discovery serves as a feature engineering enhancement tool. It's not a replacement for correlation analysis but a complementary method for structural insight in complex feature spaces. 
 
-## Relevance to Blockchain Behavior & Risk Analysis
+## Relevance to Risk Analysis and Structural Behavior
 
 Causal discovery can help identify risk propagation chains such as:
 - Transaction clustering patterns
-- Smart contract interaction effects  
-- Exchange flow dynamics
+- Cross-system dependency effects 
+- Flow dynamics in complex networks
 
 Example causal chain:
 ```
