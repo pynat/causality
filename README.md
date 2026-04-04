@@ -53,7 +53,7 @@ The goal is not prediction, but to evaluate how these approaches differ and what
 3. **Box Plot:** Outlier structure and dispersion under event-based sampling  
 4. **Rolling Volatility:** Stability of variance across market activity regimes   
 
-![Return Distribution](images/return_distribution_dollar_bars.png)  
+![Return Distribution](results/return_distribution_dollar_bars.png)  
 
 ### Risk Structure 
 
@@ -104,7 +104,7 @@ This feature taxonomy maps distributional properties of the return series (compu
 - **Return-correlation based removal:** Names the less predictive feature from each correlated pair
 - **Limitation:** Linear correlation may miss regime-dependent relationships critical in high-volatility environments
 
-![Correlation Features](images/correlation.png)  
+![Correlation Features](results/correlation.png)  
 
 **Key Empirical Findings:**
 
@@ -154,32 +154,12 @@ This feature taxonomy maps distributional properties of the return series (compu
 3. **Focus on asymmetric patterns** given positive skew in returns
 
 
-![Manual DAG](images/dag_manual.png)  
 
 
-*Volatility Persistence Chain:* `close → volatility_7d → vol_regime → vol_regime_change` aligns with observed 74% annualized volatility clustering
-
-*VaR Breach Escalation:* `return → var_breach_95/99 → vol_regime_change → market_stress` explains the monthly/quarterly tail event patterns (VaR 95% = -5.95%)
-
-*Asymmetric Momentum:* `return → upside_momentum → volume_spike` captures the positive skew (0.66) mechanism
-
-*Risk Propagation:* `drawdown → deep_drawdown → tail_risk_signal → vol_expansion` models the fat tail cascade (kurtosis = 4.38)
-
-**Manual DAG Preservation Evidence:**
-The constructed causal graph includes several correlation-flagged features as critical mediators:
-- `var_breach_95` → `vol_regime_change` (monthly tail events trigger regime shifts)
-- `var_breach_99` → `market_stress` (quarterly extreme events create stress)
-- `bb_position` → `extreme_reversal_setup` (technical extremes signal reversals)
-- `rsi` → `rsi_oversold_extreme` → `extreme_reversal_setup` (oversold conditions cascade)
-
-**The Stakes:** Removing these 33 features based on correlation alone would eliminate the very pathways that explain how market stress propagates through the system.
+**PC Algorithm**
 
 
-
-**PC Algorithm Discovery:**
-
-
-![PC Algorithm](images/algo_dag.png)  
+![PC Algorithm](results/pc_dag.png)  
 
 The algorithmic approach (37 indicators, 66 relationships) reveals additional insights:
 
@@ -191,35 +171,11 @@ The algorithmic approach (37 indicators, 66 relationships) reveals additional in
 
 *Volume-Volatility Hub:* `volume_zscore` (6 total connections) emerges as central mediator between volume dynamics and volatility regime shifts
 
-### Feature Validation (Manual vs. PC Algorithm Comparison)
 
-**Theory vs. Data Validation:**
-1. **Structural convergence:** Both approaches identify volatility clustering and risk propagation as central themes
-2. **Leading indicator validation:** PC Algorithm confirms `vol_momentum` and volatility features as primary drivers
-3. **Lag feature redundancy:** Algorithmic analysis validates correlation concerns (OHLC lag features over-connected)
-4. **Hub discovery:** `volume_zscore` emerges as key volume-volatility mediator (6 connections)
-5. **Risk consolidation validation:** `drawdown` confirmed as primary risk aggregation node (5 incoming edges)
+**Lingam Algorithm**
 
-
-Critical discovery reveals **only 6 relationships confirmed by both manual and algorithmic approaches** out of 41 manual relationships:
-- `extreme_down/up` → `extreme_streak` (extreme event clustering)
-- `volume_zscore` → `volume_spike` (volume anomaly detection) 
-- `volatility_7d` → `vol_regime` (regime classification)
-- `vol_expansion` → `vol_persistence` (volatility clustering)
-
-**Strategic Implications:**
-- **85% of manual relationships not data-supported** these are precisely the 
-spurious correlations that would cause a model to overfit. Causal discovery 
-identified them before they could enter the feature set.
-- **Confirmed relationships focus on clustering patterns** (extreme events, volume anomalies, volatility persistence), aligning with fat-tail characteristics
-- **Data reveals 56 additional relationships** particularly around lag features and technical indicator interactions missed by domain knowledge
-
-**Key Convergence:** The small overlap is the central finding of this project. 
-Domain knowledge alone produced 85% false positives! Exactly the overfitting 
-risk López de Prado identifies as the primary cause of ML failure in finance. 
-Algorithmic causal discovery reduced this risk systematically.
-
-
+![Lingam Algorithm](results/lingam_dag.png) 
+  
 
 ### Hybrid Optimization (Empirically-Informed Feature Selection)
 
@@ -230,6 +186,14 @@ to maximize signal integrity and minimize overfitting risk:
 2. **Apply selective lag pruning** - reduce OHLC lag redundancy from 5 to 1-2 most predictive features based on PC Algorithm over-connectivity warning
 3. **Maintain risk consolidation pathways** - preserve `drawdown` → risk cascade despite correlation flagging
 4. **Balance computational efficiency** with causal completeness using algorithmic connection counts as feature importance weights
+
+![DAG Comparison](results/dag_comparison.png) 
+
+
+**Kelly Strategy**
+
+![Kelly Strategy](results/kelly_strategy.png) 
+
 
 
 
@@ -257,18 +221,6 @@ represent the structurally sound core of the feature set.
 - **Lag feature validation:** 2 of 3 significant features are lag prices, supporting the "price leads price" hypothesis
 - **Technical indicator sparsity:** Only 1 technical indicator (`bb_lower`) shows genuine causal predictive power
 
-![Granger BB_Lower](images/bb_lower_lag.png)  
-
-
-
-
-
-
-
-**Key Findings:**
-- **No significant Granger causality** detected across any lag structure (all p-values > 0.05)
-- **1-day lag shows strongest signal** (p=0.146) but remains statistically insignificant
-- **Longer lags weaken predictive power** with 4-day lag showing lowest F-statistic (0.732)
 
 
 
