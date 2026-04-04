@@ -7,29 +7,24 @@
 
 Marcos López de Prado argues that most machine learning models in finance fail not because of model complexity, but due to **spurious features**, statistical relationships that do not reflect the true data-generating process.
 
-This project reframes feature engineering as a **causal inference problem**. Instead of relying on correlation, it uses causal discovery as a guardrail to distinguish meaningful structure from noise and reduce the risk of overfitting.
+This project studies feature engineering as a **causal inference problem**. Instead of relying on correlation, it uses causal discovery as a guardrail to distinguish meaningful structure from noise and reduce the risk of overfitting.
 
 To address limitations of time-based sampling, the analysis is conducted on **dollar bars**, which sample observations based on traded value rather than clock time. This aligns the data with actual market activity, reduces heteroskedasticity, and improves the statistical quality of the input.
-
-The framework is applied to ETH/USDT data to compare:
-- correlation-based feature selection,
-- Granger causality,
-- and constraint-based causal discovery.
-
-The goal is not prediction, but to evaluate how these approaches differ and what that implies for the reliability of features in financial machine learning.
 
 ---
 
 ### Research Question
 
-*Which feature relationships survive rigorous causal testing and what does the gap between assumed and validated structure tell us about overfitting risk in financial ML?*
+*Which feature relationships survive causal testing and what does the gap between assumed and validated structure tell us about overfitting risk in financial ML?*
 
 ### Methodology
 
-- **Correlation analysis** as baseline feature selection
-- **Manual DAG construction** based on domain knowledge and economic reasoning
-- **PC Algorithm** for data-driven causal graph discovery
-- **Granger causality testing** as statistical validation layer
+- **Feature Engineering based on EDA** preparing features for causal studies
+- **Correlation analysis** baseline feature selection, autocorrelation acf/pacf
+- **Stationarity Testing** ADF, 
+- **Causal Discovery** Lingam, PC
+- **Machine Learning** Triple Barrier Labeling, Random Forest, MDI/MDA
+
 
 ### Key Finding
 
