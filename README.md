@@ -17,6 +17,7 @@ The framework is applied to ETH/USDT data to compare:
 - and constraint-based causal discovery.
 
 The goal is not prediction, but to evaluate how these approaches differ and what that implies for the reliability of features in financial machine learning.
+
 ---
 
 ### Research Question
@@ -32,18 +33,14 @@ The goal is not prediction, but to evaluate how these approaches differ and what
 
 ### Key Finding
 
-85% of manually constructed causal relationships were not confirmed by data. 
-Features that fail causal validation are precisely the features that produce convincing backtests and poor live performance.
 
-The 15% that survived represent a structurally validated feature set: 
-volatility clustering, volume anomalies, and regime transitions the signals most likely to be stable across market conditions.
 
 ---
 
 
 ## Market Context: ETH Profile
 
-### Distribution Characteristics (Dollar Bars)
+### Distribution Characteristics 
 
 - **Slight positive mean return** (0.0275%) with **positive median** (0.0630%) indicates weak bullish drift in the sample period  
 - **Moderate volatility** (2.22% per bar) suggests more stable distribution compared to time bars  
@@ -58,7 +55,7 @@ volatility clustering, volume anomalies, and regime transitions the signals most
 
 ![Return Distribution](images/return_distribution_dollar_bars.png)  
 
-### Risk Structure (Dollar Bars)
+### Risk Structure 
 
 - **Near-symmetric returns (skewness -0.03)** indicate balanced upside/downside distribution, with no strong directional asymmetry  
 - **Low excess kurtosis (1.34)** suggests fewer extreme deviations compared to typical time-bar crypto returns, indicating a more stable event-based distribution  
@@ -82,7 +79,7 @@ volatility clustering, volume anomalies, and regime transitions the signals most
 ---
 
 
-## Feature Taxonomy (Prioritized by Distribution Structure)
+## Feature Taxonomy Prioritized by Distribution Structure
 
 This feature taxonomy maps distributional properties of the return series (computed on dollar bars) to relevant feature families. The goal is not to assume predictive power, but to structure feature engineering around observed statistical regimes.
 
