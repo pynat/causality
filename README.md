@@ -29,7 +29,6 @@ The goal is not prediction, but to evaluate how these approaches differ and what
 - **Manual DAG construction** based on domain knowledge and economic reasoning
 - **PC Algorithm** for data-driven causal graph discovery
 - **Granger causality testing** as statistical validation layer
-- **Cross-asset & sentiment validation** to test generalizability of findings
 
 ### Key Finding
 
@@ -42,54 +41,58 @@ volatility clustering, volume anomalies, and regime transitions the signals most
 ---
 
 
-## Market Context: ETH Returns Profile
+## Market Context: ETH Profile
 
-### Distribution Characteristics
-- **Near-zero mean return** (-0.01%) with **negative median** (-0.05%) indicates slight bearish bias in the sample period
-- **High volatility** (3.90% daily ≈ 74% annualized) creates rich signal environment
-- **Negative Sharpe ratio** (-0.05 annualized) reflects challenging risk-adjusted performance
+### Distribution Characteristics (Dollar Bars)
 
-1. **Histogram with Quantiles:** 5%, 25%, 50%, 75%, 95% thresholds
-2. **Q-Q Plot:** Tests normality assumptions for model selection
-3. **Box Plot:** Summarizes outliers and distribution shape 
-4. **Rolling Volatility:** Captures volatility clustering patterns 
+- **Slight positive mean return** (0.0275%) with **positive median** (0.0630%) indicates weak bullish drift in the sample period  
+- **Moderate volatility** (2.22% per bar) suggests more stable distribution compared to time bars  
+- **Low Sharpe ratio** (0.35 annualized) reflects weak but positive risk-adjusted performance  
+- **Near-symmetric distribution** (skewness -0.03) indicates no strong directional asymmetry  
+- **Low excess kurtosis** (1.34) suggests fewer extreme events than a normal heavy-tailed crypto return regime would typically imply  
+
+1. **Histogram with Quantiles:** 25%, 50%, 75% thresholds and tail structure  
+2. **Q-Q Plot:** Normality diagnostics for model assumptions  
+3. **Box Plot:** Outlier structure and dispersion under event-based sampling  
+4. **Rolling Volatility:** Stability of variance across market activity regimes   
 
 ![Return Distribution](images/return_distribution_dollar_bars.png)  
 
-### Risk Structure
-- **Positive skewness (0.66)** shows asymmetric tail risk → more frequent large positive moves than negative ones
-- **High kurtosis (4.38)** indicates fat tails → extreme events occur more frequently than normal distribution would predict
-- **Wide interquartile range** (Q1: -2.12%, Q3: 1.68%) demonstrates significant daily variation
+### Risk Structure (Dollar Bars)
+
+- **Near-symmetric returns (skewness -0.03)** indicate balanced upside/downside distribution, with no strong directional asymmetry  
+- **Low excess kurtosis (1.34)** suggests fewer extreme deviations compared to typical time-bar crypto returns, indicating a more stable event-based distribution  
+- **Moderate interquartile range** (Q1: -1.36%, Q3: 1.40%) reflects constrained dispersion under equal-value sampling  
 
 ### Tail Risk Profile
-- **VaR 95%: -5.95%** → expect daily losses exceeding 6% roughly **once per month** (1.5 days/month)
-- **VaR 99%: -9.32%** → approximately **every 4 months** (~2.5x per year, 252 × 0.01 = 2.52 events)
+- **VaR 95%: -3.68%** indicates moderate downside risk per dollar-activity event  
+- **VaR 99%: -5.45%** captures rare but meaningful tail losses under high-activity regimes  
 
 ### Implications for Analysis Design
 
 **For Correlation Analysis:**
-- High volatility regime detection will be critical → features capturing volatility clustering essential
-- Skewed returns indicate non-linear relationships between features → correlation may miss asymmetric dependencies
-- Fat tails suggest that extreme event indicators (tail risk signals, drawdown metrics) should correlate strongly with volatility
+- Reduced tail heaviness improves stability of linear correlation estimates, but non-linear dependencies may still dominate  
+- Symmetric return structure reduces bias toward directional effects, making regime-based features more important than simple return signals  
+- Volatility remains a primary driver of feature importance across market activity cycles  
 
 **For Causal Discovery:**
-- **Volatility persistence** (high daily volatility) suggests strong causal chains: `volatility_t → volatility_t+1 → return_magnitude`
-- **Positive skew with fat tails** implies asymmetric causal patterns: upside momentum vs. downside crashes may follow different causal pathways
-- **VaR breaches** should serve as leading indicators in the causal graph - nodes representing risk regime shifts
-- **Kurtosis signals** suggest that extreme event detectors will be important upstream nodes influencing multiple downstream features
-
+- Lower skewness reduces asymmetry bias in causal direction inference between return variables  
+- Remaining kurtosis indicates that extreme events still exist, but are less dominant structural drivers than in time-bar data  
+- Causal structure is more likely driven by **activity regimes and volatility persistence** than isolated crash events  
 ---
 
 
-## Feature Taxonomy (Prioritized by Distribution Insights)
+## Feature Taxonomy (Prioritized by Distribution Structure)
 
-| **Domain** | **Features** | **Relevance to ETH Profile** |
-|------------|--------------|-------------------------------|
-| **Volatility** | volatility_7d, vol_momentum, vol_expansion | **High Priority:** 74% annualized volatility |
-| **Risk** | drawdown, tail_risk_signal, var_breach_95 | **Critical:** VaR 95% = -5.95%, high kurtosis |
-| **Extremes** | extreme_down, extreme_streak, reversal_setup | **Essential:** Positive skew, asymmetric patterns |
-| **Technical** | rsi, bb_width, atr_normalized | **Moderate:** Support volatility clustering detection |
-| **Volume** | volume_change, volume_zscore, volume_spike | **Moderate:** Complement to volatility signals |
+This feature taxonomy maps distributional properties of the return series (computed on dollar bars) to relevant feature families. The goal is not to assume predictive power, but to structure feature engineering around observed statistical regimes.
+
+| **Domain** | **Features** | **Interpretation under Dollar Bars** |
+|------------|--------------|--------------------------------------|
+| **Volatility** | volatility_7d, vol_momentum, vol_expansion | Activity-conditioned volatility regimes reflecting changes in market participation intensity |
+| **Risk** | drawdown, var_breach_95, tail_risk_signal | Tail risk per unit of traded value rather than time-based event frequency |
+| **Extremes** | extreme_down, extreme_streak, reversal_setup | Non-linear shocks exist but are less dominant due to reduced kurtosis and sampling noise |
+| **Technical** | rsi, bb_width, atr_normalized | Proxies for latent market state dynamics and regime transitions |
+| **Volume** | volume_change, volume_zscore, volume_spike | Direct measure of information flow and market activity intensity |
 
 ---
 
@@ -262,29 +265,6 @@ represent the structurally sound core of the feature set.
 
 
 
-### External Sentiment Validation
-
-A robust feature engineering process tests not only internal indicators but 
-also commonly assumed external signals. The Fear & Greed Index is widely 
-cited as a market driver, making it a prime candidate for spurious 
-correlation testing.
-
-![Fear and Greed ETH Time Series](images/fear_greed_eth_timeseries.png)
-
-**Methodology:**
-- Downloaded Fear & Greed Index data via Alternative.me API
-- Applied first differencing and standardization to both series
-- Tested causality across lag structures (1-5 days)
-
-**Fear & Greed → ETH Returns Results:**
-
-| **Lag Structure** | **F-Statistic** | **P-Value** | **Statistical Significance** |
-|-------------------|-----------------|-------------|------------------------------|
-| 1 day | 2.124 | 0.146 | Not significant |
-| 2 days | 0.956 | 0.386 | Not significant |
-| 3 days | 1.213 | 0.305 | Not significant |
-| 4 days | 0.732 | 0.571 | Not significant |
-| 5 days | 1.330 | 0.251 | Not significant |
 
 
 
@@ -294,74 +274,6 @@ correlation testing.
 - **Longer lags weaken predictive power** with 4-day lag showing lowest F-statistic (0.732)
 
 
-### Cross-Asset Causal Validation
-
-A second spurious correlation risk in financial ML: assuming that highly 
-correlated assets predict each other. BTC and ETH move together 79% of the 
-time, but does correlation imply predictive causality? This section tests 
-that assumption.
-
-**Methodology:**
-- Downloaded 1-year daily BTC data from Binance API (320 observations)
-- Analyzed prices, returns, log-returns, and 7-day rolling volatility
-- Bidirectional Granger causality testing across 1-5 day lags
-- Extreme event synchronization analysis (90th percentile threshold)
-
-**Correlation Structure Analysis:**
-
-| **Metric** | **Correlation** | **Interpretation** |
-|------------|-----------------|-------------------|
-| Price Levels | 0.310 | Moderate long-term relationship |
-| Daily Returns | 0.791 | **Strong same-day synchronization** |
-| Log Returns | 0.796 | Robust relationship confirmation |
-| 7-Day Volatility | 0.722 | **High risk regime alignment** |
-
-**Cross-Asset Granger Causality Results:**
-
-*BTC → ETH Causality (All Directions):*
-- **Prices:** No significant causality (p-values: 0.699-0.897)
-- **Returns:** No significant causality (p-values: 0.429-0.645)
-- **Volatility:** No significant causality (p-values: 0.115-0.981)
-
-*ETH → BTC Causality:*
-- **Prices:** No significant causality (p-values: 0.344-0.856)
-- **Returns:** **Significant 1-day causality** (p=0.0393), no longer lags
-- **Volatility:** No significant causality (p-values: 0.764-0.955)
-
-**Extreme Event Synchronization:**
-- **ETH extreme days:** 32 (10% threshold)
-- **BTC extreme days:** 32 (identical frequency)
-- **Synchronized extreme events:** 21 days
-- **Synchronization rate:** **65.6%** - high crisis contagion
-
-**Critical Findings:**
-
-**The Correlation-Causality Paradox:**
-Despite **79% daily return correlation**, only **one significant causal relationship** exists: ETH returns predict next-day BTC returns (1-day lag). This exemplifies the fundamental distinction between correlation and causality in financial markets.
-
-**Market Leadership Dynamics:**
-- **ETH leads BTC** in return prediction - a rare finding since BTC typically leads altcoins
-- **No reverse causality** from BTC to ETH across any timeframe
-- **Volatility spillovers absent** despite 72% volatility correlation
-
-**Risk Management Implications:**
-- **Limited diversification during crises:** 66% probability both assets experience extreme movements simultaneously
-- **Contemporaneous risk dominates:** Most correlation occurs same-day, not sequentially
-- **Cross-asset prediction minimal:** Even major crypto pairs show limited predictive relationships
-
-**Strategic Insights:**
-- **ETH momentum strategies** may generate next-day BTC return signals
-- **Portfolio risk models** must account for high extreme event synchronization
-- **Market efficiency validated** even for highly correlated crypto asset pairs
-- **Technical analysis remains superior** to cross-asset prediction for individual asset strategies
-
-**Integration with Previous Findings:**
-This analysis reinforces the central argument of this project: correlation 
-is not causality, and features selected on correlation alone carry quantified 
-overfitting risk. Even between 79%-correlated assets, genuine predictive 
-structure is rare and narrow. This is precisely what López de Prado's 
-framework predicts and what this project empirically confirms across 
-internal features, external sentiment, and cross-asset relationships.
 
 
 ---
