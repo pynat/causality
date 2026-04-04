@@ -76,7 +76,7 @@ To address limitations of time-based sampling, the analysis is conducted on **do
 
 ## Feature Taxonomy Prioritized by Distribution Structure
 
-This feature taxonomy maps distributional properties of the return series (computed on dollar bars) to relevant feature families. The goal is not to assume predictive power, but to structure feature engineering around observed statistical regimes.
+This feature taxonomy maps distributional properties of the return series (computed on dollar bars) to relevant feature families. The goal is to structure feature engineering around observed statistical regimes.
 
 | **Domain** | **Features** | **Interpretation under Dollar Bars** |
 |------------|--------------|--------------------------------------|
@@ -90,12 +90,8 @@ This feature taxonomy maps distributional properties of the return series (compu
 
 ### Correlation Analysis
 
-**Intelligent Feature Reduction:**
 - **Pros:** Simple, fast, reduces multicollinearity
 - **Cons:** Ignores causal structure, risks discarding valuable mediators, may miss asymmetric relationships
-- **Method:** Remove features with high pairwise correlation (e.g., >0.8)
-- Heatmap construction for full feature sets
-- Identification of highly correlated pairs
 - **Return-correlation based removal:** Names the less predictive feature from each correlated pair
 - **Limitation:** Linear correlation may miss regime-dependent relationships critical in high-volatility environments
 
@@ -103,18 +99,9 @@ This feature taxonomy maps distributional properties of the return series (compu
 
 **Key Empirical Findings:**
 
-*High Correlation Clusters (>0.8):*
-- **Price level cluster:** VWAP, lagged OHLC, and Bollinger Bands show extreme correlation (0.94-0.99) - classic multicollinearity
-- **Risk indicator cluster:** `var_breach_95` and `var_breach_99` (corr=0.98), redundant tail risk signals
-- **Technical indicator overlap:** RSI correlates strongly with VWAP distance (0.93) and BB position (0.89)
 
-*Return Correlation Leaders:*
-- **Extreme movement indicators** dominate: `extreme_up` (0.54), `extreme_down` (0.43)
-- **Risk metrics** show moderate correlation: `drawdown` (0.31), `deep_drawdown` (0.18)
-- **Price level features** exhibit low return correlation despite high inter-correlation
 
-*Critical Observation for Causal Analysis:*
-**33 features flagged for potential removal** due to high inter-correlation but low return correlation. These are prime candidates for **mediator preservation** in causal discovery, as correlation-based removal might eliminate important signal propagation pathways.
+
 
 ### Causal Discovery as Feature Engineering Guardrail
 
@@ -142,11 +129,6 @@ This feature taxonomy maps distributional properties of the return series (compu
 
 **Note:** Causal graphs serve as **heuristics for signal architecture** informed by empirical return characteristics, not definitive causal truth.
 
-**Manual DAG Validation:**
-
-1. **Exclude target variable** from algo DAG (prevents data leakage)
-2. **Apply domain knowledge** supplemented by empirical distribution insights
-3. **Focus on asymmetric patterns** given positive skew in returns
 
 
 
