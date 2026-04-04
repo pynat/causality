@@ -1,20 +1,22 @@
+# UNDER CONSTRUCTION
+
 # Causal Feature Validation Framework: Quantifying Overfitting Risk in Financial ML
 
 
 ## Overview
 
-Marcos López de Prado argues that most ML models in finance fail not because of poor algorithms, but because of **spurious features**, correlations that exist in the training data but carry no causal signal. 
+Marcos López de Prado argues that most machine learning models in finance fail not because of model complexity, but due to **spurious features**, statistical relationships that do not reflect the true data-generating process.
 
-This project applies causal discovery as a **feature engineering guardrail**: 
-a systematic method to identify which relationships in financial time series 
-reflect genuine data-generating processes and which are statistical artifacts 
-that would cause a model to overfit and fail out-of-sample.
+This project reframes feature engineering as a **causal inference problem**. Instead of relying on correlation, it uses causal discovery as a guardrail to distinguish meaningful structure from noise and reduce the risk of overfitting.
 
-Applied to one year of ETH/USDT daily data, I investigate how correlation-based 
-selection, causal discovery algorithms, and statistical causality testing diverge 
-and what that divergence reveals about the reliability of common feature 
-engineering assumptions.
+To address limitations of time-based sampling, the analysis is conducted on **dollar bars**, which sample observations based on traded value rather than clock time. This aligns the data with actual market activity, reduces heteroskedasticity, and improves the statistical quality of the input.
 
+The framework is applied to ETH/USDT data to compare:
+- correlation-based feature selection,
+- Granger causality,
+- and constraint-based causal discovery.
+
+The goal is not prediction, but to evaluate how these approaches differ and what that implies for the reliability of features in financial machine learning.
 ---
 
 ### Research Question
@@ -52,7 +54,7 @@ volatility clustering, volume anomalies, and regime transitions the signals most
 3. **Box Plot:** Summarizes outliers and distribution shape 
 4. **Rolling Volatility:** Captures volatility clustering patterns 
 
-![Return Distribution](images/return_distribution.png)  
+![Return Distribution](images/return_distribution_dollar_bars.png)  
 
 ### Risk Structure
 - **Positive skewness (0.66)** shows asymmetric tail risk → more frequent large positive moves than negative ones
