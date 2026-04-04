@@ -1,265 +1,229 @@
 # UNDER CONSTRUCTION
 
-# Causal Feature Validation Framework: Quantifying Overfitting Risk in Financial ML
-
+# Regime-Conditioned Kelly Sizing on ETH: A De Prado ML Framework with Causal Discovery
 
 ## Overview
 
-Marcos López de Prado argues that most machine learning models in finance fail not because of model complexity, but due to **spurious features**, statistical relationships that do not reflect the true data-generating process.
+Marcos López de Prado argues that most machine learning models in finance fail not because of model complexity, but due to **spurious features** — statistical relationships that do not reflect the true data-generating process.
 
-This project studies feature engineering as a **causal inference problem**. Instead of relying on correlation, it uses causal discovery as a guardrail to distinguish meaningful structure from noise and reduce the risk of overfitting.
+This project implements de Prado's ML framework on ETH/USDT, extended with causal discovery as a methodological guardrail. Rather than predicting price direction, the system predicts **volatility regimes** and sizes positions via fractional Kelly criterion conditioned on regime probabilities.
 
-To address limitations of time-based sampling, the analysis is conducted on **dollar bars**, which sample observations based on traded value rather than clock time. This aligns the data with actual market activity, reduces heteroskedasticity, and improves the statistical quality of the input.
+To address limitations of time-based sampling, the analysis is conducted on **dollar bars** ($500M threshold), which sample observations based on traded value rather than clock time. This reduces heteroskedasticity, improves serial independence of returns, and aligns data with actual market activity.
 
 ---
 
 ### Research Question
 
-*Which feature relationships survive causal testing and what does the gap between assumed and validated structure tell us about overfitting risk in financial ML?*
+*Can a regime-conditioned Kelly sizing system built on causally-validated features produce a better risk-adjusted return than buy & hold on a highly volatile crypto asset?*
 
 ### Methodology
 
-- **Feature Engineering based on EDA** preparing features for causal studies
-- **Correlation analysis** baseline feature selection, autocorrelation acf/pacf
-- **Stationarity Testing** ADF, 
-- **Causal Discovery** Lingam, PC
-- **Machine Learning** Triple Barrier Labeling, Random Forest, MDI/MDA
-
+- **Dollar Bar Construction** — $500M threshold, 2319 bars over 3 years, validated via Durbin-Watson (1.95) and Ljung-Box (p > 0.4)
+- **Feature Engineering** — volatility, volume, drawdown, technical and tail-risk features, all ADF-tested for stationarity
+- **Correlation Analysis** — multicollinearity hygiene via clustering (threshold 0.85), not feature selection
+- **Causal Discovery** — PC algorithm + LiNGAM to map feature dependency structure and identify true drivers vs downstream nodes
+- **Triple Barrier Labeling** — PT = 1.5x ATR, SL = 1.0x ATR, max hold = 20 bars
+- **Random Forest with Purged K-Fold CV** — n=5 folds, embargo=1%, prevents temporal leakage
+- **MDI/MDA Feature Importance** — cross-referenced with causal graph to validate signal vs noise
+- **Regime-Conditioned Kelly Sizing** — fractional Kelly (0.25x) applied per predicted regime probability
 
 ### Key Finding
 
+Causal discovery and MDI/MDA produced **mutually explanatory results**. RSI ranked 3rd by MDI (in-sample importance) but last by MDA (out-of-sample). LiNGAM explained the mechanism: RSI is a pure downstream node driven by `vwap_distance`, `bb_width`, and `drawdown` — it carries no independent predictive signal. MDI was deceived by its correlation with genuine drivers. This cross-validation is the primary methodological contribution of the hybrid framework.
 
+### Results (annualized, out-of-sample, no transaction costs)
+
+| Metric | Strategy | Buy & Hold |
+|---|---|---|
+| Annual Return | 8.5% | 29.8% |
+| Annual Volatility | 8.4% | 64.1% |
+| Sharpe Ratio | **1.01** | 0.47 |
+| Max Drawdown | **-9.5%** | -65.0% |
+| Avg Capital Deployed | 11.3% | 100% |
+
+The strategy sacrifices absolute return in exchange for dramatically reduced risk. Fold stability (accuracy 0.641–0.682, no degradation in most recent fold) confirms temporal generalization.
+
+### Limitations
+
+- Transaction costs not modeled (est. 0.05–0.1% per trade on Binance)
+- No walk-forward retraining — model trained on fixed 3-year window
+- Kelly inputs estimated from same dataset used for evaluation
+- Paper trading validation required before any capital deployment
+
+> This is a proof-of-concept, not a deployable system.
 
 ---
-
 
 ## Market Context: ETH Profile
 
-### Distribution Characteristics 
+### Distribution Characteristics
 
-- **Slight positive mean return** (0.0275%) with **positive median** (0.0630%) indicates weak bullish drift in the sample period  
-- **Moderate volatility** (2.22% per bar) suggests more stable distribution compared to time bars  
-- **Low Sharpe ratio** (0.35 annualized) reflects weak but positive risk-adjusted performance  
-- **Near-symmetric distribution** (skewness -0.03) indicates no strong directional asymmetry  
-- **Low excess kurtosis** (1.34) suggests fewer extreme events than a normal heavy-tailed crypto return regime would typically imply  
+- **Slight positive mean return** (0.0275%) with positive median (0.0630%) indicates weak bullish drift in the sample period
+- **Moderate volatility** (2.22% per bar) — more stable than time bars due to event-based sampling
+- **Near-symmetric distribution** (skewness -0.03) indicates no strong directional asymmetry
+- **Low excess kurtosis** (1.34) suggests fewer extreme events than typical time-bar crypto returns
 
-1. **Histogram with Quantiles:** 25%, 50%, 75% thresholds and tail structure  
-2. **Q-Q Plot:** Normality diagnostics for model assumptions  
-3. **Box Plot:** Outlier structure and dispersion under event-based sampling  
-4. **Rolling Volatility:** Stability of variance across market activity regimes   
-
-![Return Distribution](results/return_distribution_dollar_bars.png)  
-
-### Risk Structure 
-
-- **Near-symmetric returns (skewness -0.03)** indicate balanced upside/downside distribution, with no strong directional asymmetry  
-- **Low excess kurtosis (1.34)** suggests fewer extreme deviations compared to typical time-bar crypto returns, indicating a more stable event-based distribution  
-- **Moderate interquartile range** (Q1: -1.36%, Q3: 1.40%) reflects constrained dispersion under equal-value sampling  
+![Return Distribution](results/return_distribution_dollar_bars.png)
 
 ### Tail Risk Profile
-- **VaR 95%: -3.68%** indicates moderate downside risk per dollar-activity event  
-- **VaR 99%: -5.45%** captures rare but meaningful tail losses under high-activity regimes  
 
-### Implications for Analysis Design
+- **VaR 95%: -3.68%** — moderate downside risk per dollar-activity event
+- **VaR 99%: -5.45%** — rare but meaningful tail losses under high-activity regimes
 
-**For Correlation Analysis:**
-- Reduced tail heaviness improves stability of linear correlation estimates, but non-linear dependencies may still dominate  
-- Symmetric return structure reduces bias toward directional effects, making regime-based features more important than simple return signals  
-- Volatility remains a primary driver of feature importance across market activity cycles  
+### Serial Independence Validation
 
-**For Causal Discovery:**
-- Lower skewness reduces asymmetry bias in causal direction inference between return variables  
-- Remaining kurtosis indicates that extreme events still exist, but are less dominant structural drivers than in time-bar data  
-- Causal structure is more likely driven by **activity regimes and volatility persistence** than isolated crash events  
----
+Dollar bars are theoretically more i.i.d. than time bars. This was validated empirically:
 
+- **Durbin-Watson: 1.95** — near-perfect, no lag-1 autocorrelation
+- **Ljung-Box lag 10: p = 0.42** — no autocorrelation across first 10 lags
+- **Ljung-Box lag 20: p = 0.71** — holds across 20 lags
 
-## Feature Taxonomy Prioritized by Distribution Structure
-
-This feature taxonomy maps distributional properties of the return series (computed on dollar bars) to relevant feature families. The goal is to structure feature engineering around observed statistical regimes.
-
-| **Domain** | **Features** | **Interpretation under Dollar Bars** |
-|------------|--------------|--------------------------------------|
-| **Volatility** | volatility_7d, vol_momentum, vol_expansion | Activity-conditioned volatility regimes reflecting changes in market participation intensity |
-| **Risk** | drawdown, var_breach_95, tail_risk_signal | Tail risk per unit of traded value rather than time-based event frequency |
-| **Extremes** | extreme_down, extreme_streak, reversal_setup | Non-linear shocks exist but are less dominant due to reduced kurtosis and sampling noise |
-| **Technical** | rsi, bb_width, atr_normalized | Proxies for latent market state dynamics and regime transitions |
-| **Volume** | volume_change, volume_zscore, volume_spike | Direct measure of information flow and market activity intensity |
+This confirms the core motivation for dollar bars: returns are statistically independent, satisfying the assumption most ML models require.
 
 ---
 
-### Correlation Analysis
+## Feature Engineering
 
-- **Pros:** Simple, fast, reduces multicollinearity
-- **Cons:** Ignores causal structure, risks discarding valuable mediators, may miss asymmetric relationships
-- **Return-correlation based removal:** Names the less predictive feature from each correlated pair
-- **Limitation:** Linear correlation may miss regime-dependent relationships critical in high-volatility environments
+Features are grouped by domain and mapped to distributional properties of the return series:
 
-![Correlation Features](results/correlation.png)  
+| Domain | Features | Rationale |
+|---|---|---|
+| Volatility | `volatility_7b`, `vol_momentum`, `vol_expansion` | Activity-conditioned regime signals |
+| Risk | `drawdown`, `deep_drawdown` | Tail risk per unit of traded value |
+| Extremes | `extreme_down`, `extreme_streak` | Non-linear shock detection |
+| Technical | `bb_width`, `atr_normalized`, `vwap_distance` | Latent market state proxies |
+| Volume | `volume_change`, `volume_zscore` | Information flow and activity intensity |
 
-**Key Empirical Findings:**
+All 30 features passed ADF stationarity testing. Binary features were validated for class balance — 4 features with under 3% positive class were dropped as uninformative.
 
+---
 
+## Correlation Analysis
 
+![Correlation Features](results/correlation.png)
 
+Correlation analysis serves one purpose only: **multicollinearity hygiene**. Features are not selected or ranked here — that is MDI/MDA's job.
 
-### Causal Discovery as Feature Engineering Guardrail
+One cluster was identified at threshold 0.85: `vwap_distance`, `rsi`, `bb_position` (max correlation 0.93). All three measure "where is price relative to a reference" — `vwap_distance` was retained as volume-informed. Final selection deferred to MDI/MDA post-training.
 
-**Pros:** Uncovers directional dependencies, preserves signal hierarchies, captures asymmetric patterns
-- **Cons:** Computationally demanding, manual dag requires strong assumptions
-- **Method:** Uses manual discovery as well as causal discovery algorithms (PC Algorithm, FCI)
+---
 
-**Objectives:**
-- Identify **leading indicators** vs. **lagging confirmations** (critical for regime changes)
-- Understand **propagation chains** (e.g., extreme_events → volatility_spike → behavioral_shifts)
-- Avoid **data leakage** by excluding the target from the DAG
-- Build **interpretable signal hierarchies** that account for asymmetric market behavior
+## Causal Discovery as Feature Engineering Guardrail
 
-**Enhanced Focus Areas:**
-- **Volatility clustering patterns:** How do high-volatility periods self-perpetuate?
-- **Regime transition signals:** What triggers moves from low to high volatility states?
-- **Asymmetric response patterns:** Different causal pathways for positive vs. negative extreme moves
-- **Tail risk propagation:** How do VaR breaches influence other risk indicators?
+Causal discovery (PC algorithm + LiNGAM) was used to map directional dependencies between features — identifying true drivers vs. downstream nodes before model training.
 
-**Warning:** Using the target in the DAG creates look-ahead bias.
+**Purpose:** Cross-validate MDI/MDA importance scores with structural causal evidence. Features that rank high in MDI but are causally downstream are flagged as noise candidates.
 
-**Solutions:**
-- **Option A:** Remove `return` entirely from causal graph
-- **Option B:** Use **lagged returns** (return_t-1 → return_t) with proper temporal separation
+**What causal discovery does not do here:**
+- It does not select features autonomously — MDI/MDA makes final decisions
+- It does not establish definitive causal truth — it provides structural heuristics
+- It does not replace domain knowledge — results are interpreted in context
 
-**Note:** Causal graphs serve as **heuristics for signal architecture** informed by empirical return characteristics, not definitive causal truth.
-
-
-
-
+**Temporal integrity:** `return` was excluded from the causal graph. All features entering the graph use `.shift(1)` to prevent look-ahead bias.
 
 **PC Algorithm**
 
+![PC Algorithm](results/pc_dag.png)
 
-![PC Algorithm](results/pc_dag.png)  
+The PC algorithm identified 8 directed and 7 undirected edges across 15 features. Key structural findings:
 
-The algorithmic approach (37 indicators, 66 relationships) reveals additional insights:
+- `bb_width` emerges as the largest causal hub — driving `volatility_7b`, `rsi`, `drawdown`, `vol_momentum`, and `volume_zscore`
+- `vwap_distance` and `drawdown` are primary drivers of `rsi`, explaining why RSI carries no independent signal
+- `vol_regime` — `volatility_7b` direction was ambiguous (undirected), resolved by LiNGAM
 
-*Leading Indicators:* `vol_momentum` (6 outgoing connections), `vwap_distance` (4 connections) emerge as top causal drivers - validating volatility clustering importance
+**LiNGAM Algorithm**
 
-*Risk Aggregators:* `drawdown` (5 incoming connections), `volume_zscore` (4 incoming) serve as key risk consolidation nodes
+![LiNGAM Algorithm](results/lingam_dag.png)
 
-*Lag Feature Over-influence:* OHLC lag features show 3+ connections each, confirming correlation analysis concerns about redundancy
+LiNGAM resolved directional ambiguity using non-Gaussianity. Key additions:
 
-*Volume-Volatility Hub:* `volume_zscore` (6 total connections) emerges as central mediator between volume dynamics and volatility regime shifts
-
-
-**Lingam Algorithm**
-
-![Lingam Algorithm](results/lingam_dag.png) 
-  
-
-### Hybrid Optimization (Empirically-Informed Feature Selection)
-
-Based on the causal validation results, the final feature set is constructed 
-to maximize signal integrity and minimize overfitting risk:
-
-1. **Preserve algorithmic hubs** like `vol_momentum` (6 connections) and `volume_zscore` (6 connections) as core features
-2. **Apply selective lag pruning** - reduce OHLC lag redundancy from 5 to 1-2 most predictive features based on PC Algorithm over-connectivity warning
-3. **Maintain risk consolidation pathways** - preserve `drawdown` → risk cascade despite correlation flagging
-4. **Balance computational efficiency** with causal completeness using algorithmic connection counts as feature importance weights
-
-![DAG Comparison](results/dag_comparison.png) 
-
-
-**Kelly Strategy**
-
-![Kelly Strategy](results/kelly_strategy.png) 
-
-
-
-
-
-## Granger Causality Validation
-
-To validate the causal relationships discovered by the PC Algorithm, we applied **Granger causality tests** to identify features with genuine predictive power.
-
-**Results:**
-- **Only 3 features** showed significant Granger causality (p < 0.05) toward returns:
-  - `bb_lower` (p=0.041) - Bollinger Band lower bound
-  - `open_lag1` (p=0.048) - Lagged opening price  
-  - `low_lag1` (p=0.049) - Lagged low price
-
-**Critical Finding:** Only 3 of ~40 PC Algorithm features survive Granger 
-validation, meaning 92.5% would have entered a model as spurious signals. 
-This is the quantified overfitting risk that López de Prado's framework is 
-designed to prevent. The 3 validated features (bb_lower, open_lag1, low_lag1) 
-represent the structurally sound core of the feature set.
-
-**Implications:**
-- **PC Algorithm as filter:** The 66 discovered relationships 
-  required Granger validation, algorithmic discovery narrows the search space 
-  but does not replace statistical testing. Both layers are necessary.
-- **Lag feature validation:** 2 of 3 significant features are lag prices, supporting the "price leads price" hypothesis
-- **Technical indicator sparsity:** Only 1 technical indicator (`bb_lower`) shows genuine causal predictive power
-
-
-
-
+- Confirmed `vol_regime → volatility_7b` (strength 16.2) — regime drives realized volatility, not the reverse
+- 18 edges confirmed by both PC and LiNGAM — treated as high-confidence causal structure
+- `position_size_factor` identified as downstream of `atr_normalized`, `bb_width`, and `vol_regime`
 
 ---
 
-## Key Learnings: When Causal Discovery Adds Value
+## Triple Barrier Labeling & Feature Importance
 
-1. Network Hub Identification
+**Triple Barrier Labeling** (de Prado, AFML ch. 3) replaces naive return-direction labels with structurally sound targets:
 
-- PC Algorithm successfully identified central features (vol_momentum, volume_zscore with 6+ connections)
+- **Upper barrier:** Profit target at 1.5x ATR
+- **Lower barrier:** Stop-loss at 1.0x ATR
+- **Vertical barrier:** Maximum hold of 20 bars
 
-- Validated benefit: Prioritizes features with maximum structural influence
-- Business value: Focus computational resources on highest-impact variables
+Label distribution: 52.5% stops hit, 47.2% profit targets hit, 0.3% timeouts — confirming ETH is volatile enough to always resolve within 20 bars. The near-balanced distribution eliminates the need for resampling.
 
-2. Redundancy Detection Enhancement
+**MDI vs MDA: The Core Diagnostic**
 
-- Over-connectivity analysis flagged OHLC lag feature redundancy (3+ connections each)
-- Validated benefit: Confirms correlation analysis with structural reasoning
-- Business value: More confident feature elimination decisions
+![Feature Importance](results/random_forest.png)
 
-3. Risk Consolidation Mapping
+A Random Forest was trained on all stationary features with triple barrier labels as target. Two importance measures were computed and cross-referenced with causal discovery results:
 
-- Identified drawdown as primary risk aggregation node (5 incoming connections)
-- Validated benefit: Reveals which features serve as risk concentration points
-- Business value: Better risk monitoring and stress testing design
+- **MDI (Mean Decrease Impurity):** In-sample, computed from tree structure. Fast but biased toward high-cardinality and correlated features.
+- **MDA (Mean Decrease Accuracy):** Out-of-sample permutation importance on held-out data. Slower but honest.
 
-**Use Causal Discovery For:**
+The gap between MDI and MDA revealed the key finding of this project:
 
-- Feature prioritization (identify hubs for computational focus)
-- Redundancy validation (confirm correlation-based elimination)
-- Risk architecture (map stress propagation pathways)
-- Leakage Discovery in your Features 
+| Feature | MDI Rank | MDA Rank | Verdict |
+|---|---|---|---|
+| `rsi` | 3 | 25 (last) | noise — causally downstream |
+| `volume` | 1 | 24 | noise — no causal confirmation |
+| `atr_normalized` | 2 | 1 | genuine signal |
+| `bb_width` | 5 | 2 | genuine signal |
 
+9 features with negative MDA were dropped. These features hurt out-of-sample performance despite appearing important in-sample.
 
-**Bottom Line:** This project quantifies what López de Prado argues theoretically: 
-domain knowledge alone produces ~85% false positives in feature construction. 
-Causal discovery is not a prediction tool, it is an overfitting prevention 
-mechanism. Used as a guardrail before model training, it systematically removes 
-the spurious correlations that cause convincing backtests to fail in production.
+**Final Feature Set (MDI/MDA validated, causally confirmed):**
 
-## Relevance to Blockchain Behavior & Risk Analysis
+| Feature | MDA Rank | Causal Status |
+|---|---|---|
+| `atr_normalized` | 1 | driver of vol_regime, volume_zscore |
+| `bb_width` | 2 | largest causal hub |
+| `volume_change` | 3 | driver of vol_regime, volatility_7b |
+| `drawdown` | 4 | driver of rsi, volatility_7b |
+| `volatility_7b` | 6 | causal mediator |
+| `vol_regime` | 7 | confirmed driver (LiNGAM) |
 
-Causal discovery can help identify risk propagation chains such as:
-- Transaction clustering patterns
-- Smart contract interaction effects  
-- Exchange flow dynamics
+**Purged K-Fold Cross Validation**
 
-Example causal chain:
-```
-sudden_token_inflow → liquidity_stress → price_dislocation → user_exit_behavior
-```
+Standard k-fold leaks future information at fold boundaries due to rolling feature windows. Purged CV removes training samples whose window overlaps the test period, plus an embargo buffer of 1% of bars after each test fold.
 
-This makes it relevant for:
-- **Anomaly detection** (e.g., identifying unusual market structure changes)
-- **Risk attribution** (e.g., tracing volatility spikes back to on-chain triggers)  
-- **Protocol monitoring** (e.g., structural shifts in user behavior patterns)
+| Fold | Accuracy | AUC |
+|---|---|---|
+| 1 | 0.544 | 0.543 |
+| 2 | 0.533 | 0.536 |
+| 3 | 0.536 | 0.524 |
+| 4 | 0.525 | 0.529 |
+| 5 | 0.525 | 0.534 |
+| **mean** | **0.533** | **0.533** |
 
+AUC = 0.533 on triple barrier labels — weak but present edge. This is the honest baseline before regime conditioning. The regime model achieves substantially higher AUC (0.84–0.91) because volatility persistence is a structurally easier prediction problem than price direction.
+
+---
+
+## Kelly Strategy
+
+![Kelly Strategy](results/kelly_strategy.png)
+
+Positions are sized via fractional Kelly criterion (0.25x) conditioned on predicted regime probabilities. The model never predicts direction — it predicts which volatility regime the next bar will occupy, then scales exposure accordingly.
+
+| Regime | Kelly Size | Rationale |
+|---|---|---|
+| Low vol | 24.5% capital | trending, low risk — long bias |
+| Med vol | 9.2% capital | uncertain — reduced exposure |
+| High vol | 0.0% capital | risk-off — flat |
+
+Regime probabilities are generated fully out-of-sample via walk-forward purged CV — the model never sees the bar it predicts. Average capital deployed: 11.3%.
+
+The strategy sacrifices absolute return in exchange for dramatically reduced risk. On an asset that lost 65% at peak drawdown, the system stayed within -9.5% — by design, through regime-conditioned position sizing rather than stop-losses or hedging.
+
+> Transaction costs not modeled. Paper trading validation required before any capital deployment.
+
+---
 
 ## Usage
 ```bash
-bashgit clone [repository]
+git clone https://github.com/pynat/causality
 pip install -r requirements.txt
 jupyter notebook inference_and_causality.ipynb
 ```
