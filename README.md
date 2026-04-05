@@ -1,6 +1,6 @@
 # UNDER CONSTRUCTION
 
-# Regime-Conditioned Kelly Sizing on ETH: A De Prado ML Framework with Causal Discovery
+# De Prado ML Framework with Causal Discovery: Regime-Conditioned Kelly Sizing on ETH
 
 ## Overview
 
@@ -14,14 +14,14 @@ To address limitations of time-based sampling, the analysis is conducted on **do
 
 ### Research Question
 
-*Can a regime-conditioned Kelly sizing system built on causally-validated features produce a better risk-adjusted return than buy & hold?*
+*Does grounding feature selection in causal structure improve the risk-adjusted performance of a Kelly-sized trading strategy on ETH dollar bars?*
 
 ### Methodology
 
 - **Dollar Bar Construction** $500M threshold, 2319 bars over 3 years, validated via Durbin-Watson (1.95) and Ljung-Box (p > 0.4)
 - **Feature Engineering** volatility, volume, drawdown, technical and tail-risk features, all ADF-tested for stationarity
 - **Correlation Analysis** multicollinearity hygiene via clustering (threshold 0.85), not feature selection
-- **Causal Discovery** PC algorithm + LiNGAM to map feature dependency structure and identify true drivers vs downstream nodes
+- **Causal Discovery** PCMCI map feature dependency structure and identify true drivers vs downstream nodes
 - **Triple Barrier Labeling** PT = 1.5x ATR, SL = 1.0x ATR, max hold = 20 bars
 - **Random Forest with Purged K-Fold CV** n=5 folds, embargo=1%, prevents temporal leakage
 - **MDI/MDA Feature Importance** cross-referenced with causal graph to validate signal vs noise
@@ -107,34 +107,27 @@ Correlation analysis serves one purpose only: **multicollinearity hygiene**. Fea
 One cluster was identified at threshold 0.85: `vwap_distance`, `rsi`, `bb_position` (max correlation 0.93). All three measure "where is price relative to a reference", `vwap_distance` was retained as volume-informed. Final selection deferred to MDI/MDA post-training.
 
 ---
+## Causal Discovery (PCMCI)
 
-## Causal Discovery as Feature Engineering Guardrail
-
-Causal discovery (PC algorithm + LiNGAM) was used to map directional dependencies between features, identifying true drivers vs. downstream nodes before model training.
+Causal discovery PCMCI was used to map directional dependencies between features, identifying true drivers vs. downstream nodes before model training.
 
 **Purpose:** Cross-validate MDI/MDA importance scores with structural causal evidence. Features that rank high in MDI but are causally downstream are flagged as noise candidates.
 
-**Temporal integrity:** `return` was excluded from the causal graph. All features entering the graph use `.shift(1)` to prevent look-ahead bias.
 
-**PC Algorithm**
+Causal structure of ETH dollar bar features identified via PCMCI (Tigramite, 
+ParCorr, α=0.05, lags 1–5). PCMCI conditions on the full feature history, 
+preventing spurious correlations and look-ahead bias by construction.
 
-![PC Algorithm](results/pc_dag.png)
+Key findings:
+- `vwap_distance` and `rsi` are the strongest causal drivers of `drawdown` (lag=1, strength >0.90)
+- `bb_width` drives volatility, momentum, and drawdown across multiple lags
+- 293 significant causal links identified; no contradictions with temporal ordering
+- Results used as structural prior for MDI/MDA feature importance interpretation
 
-The PC algorithm identified 8 directed and 7 undirected edges across 15 features. Key structural findings:
-
-- `bb_width` emerges as the largest causal hub driving `volatility_7b`, `rsi`, `drawdown`, `vol_momentum`, and `volume_zscore`
-- `vwap_distance` and `drawdown` are primary drivers of `rsi`, explaining why RSI carries no independent signal
 
 
-**LiNGAM Algorithm**
+![PCMCI Algorithm With Strongest Edges](results/pcmci_dag_clean.png)
 
-![LiNGAM Algorithm](results/lingam_dag.png)
-
-LiNGAM resolved directional ambiguity using non-Gaussianity. Key additions:
-
-- Confirmed `vol_regime → volatility_7b` (strength 16.2), regime drives realized volatility, not the reverse
-- 18 edges confirmed by both PC and LiNGAM, treated as high-confidence causal structure
-- `position_size_factor` identified as downstream of `atr_normalized`, `bb_width`, and `vol_regime`
 
 ---
 
